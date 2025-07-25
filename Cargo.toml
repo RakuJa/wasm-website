@@ -1,0 +1,55 @@
+[package]
+name = "website"
+version = "1.0.0"
+authors = ["RakuJa"]
+
+# Compiler info
+edition = "2024"
+rust-version = "1.85.1"
+
+description = "My personal website"
+readme = "README.md"
+homepage = "https://danielegiachett.com"
+repository = "https://github.com/RakuJa/tmp"
+license = "MIT"
+keywords = ["website", "wasm", "ratzilla", "tui"]
+publish = false
+
+[lints.rust]
+unsafe_code = "forbid"
+deprecated = "allow"
+
+[lints.clippy]
+struct_field_names = { level = "allow", priority = 2 }
+module_name_repetitions = { level = "allow", priority = 2 }
+# We are ok with losing some data without wrapping. We are not ok with wrapping
+# Ex: 128.12 => 128 is ok, 128 => 0 is not.
+cast_possible_truncation = { level = "allow", priority = 2 }
+cast_precision_loss = { level = "allow", priority = 2 }
+
+future_not_send = { level = "allow", priority = 2 }
+
+pedantic = { level = "warn", priority = 1 }
+nursery = { level = "warn", priority = 1 }
+# unwrap_used = {level = "warn", priority = 1}
+
+
+[dependencies]
+
+ratzilla = "0.1.0"
+tachyonfx = { version = "0.16.0", default-features = false, features = ["web-time"]}
+console_error_panic_hook = "0.1.7"
+
+web-sys = { version = "0.3", features = [
+    "Window",
+    "Document",
+    "Element",
+    "HtmlElement",
+    "Location",
+    "Url",
+    "UrlSearchParams",
+] }
+wasm-bindgen = "0.2"
+web-time = "1.1"
+
+fastrand = "2.3.0"
