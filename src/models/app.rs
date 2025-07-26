@@ -1,4 +1,4 @@
-use crate::models::item::Item;
+use crate::models::item::Topic;
 use crate::{
     ALT_ROW_BG_COLOR, COMPLETED_TEXT_FG_COLOR, NORMAL_ROW_BG, SELECTED_STYLE, TEXT_FG_COLOR,
     TODO_HEADER_STYLE,
@@ -11,6 +11,8 @@ use ratzilla::ratatui::widgets::{
     Block, Borders, HighlightSpacing, List, ListItem, ListState, Padding, Paragraph, Wrap,
 };
 use ratzilla::utils::open_url;
+use strum::IntoEnumIterator;
+use crate::models::status::Status;
 
 #[derive(Default)]
 pub struct App {
@@ -25,27 +27,12 @@ struct BulletPoints {
 
 #[derive(Debug)]
 struct BulletItem {
-    item: Item,
+    topic: Topic,
     status: Status,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-enum Status {
-    Todo,
-    Completed,
-}
-
-impl Status {
-    pub const fn get_status_char(self) -> char {
-        match self {
-            Self::Todo => '☐',
-            Self::Completed => '✓',
-        }
-    }
-}
-
-impl FromIterator<(Status, Item)> for BulletPoints {
-    fn from_iter<I: IntoIterator<Item = (Status, Item)>>(iter: I) -> Self {
+impl FromIterator<(Status, Topic)> for BulletPoints {
+    fn from_iter<I: IntoIterator<Item = (Status, Topic)>>(iter: I) -> Self {
         let items = iter
             .into_iter()
             .map(|(status, item)| BulletItem::new(status, item))
@@ -57,16 +44,13 @@ impl FromIterator<(Status, Item)> for BulletPoints {
 
 impl Default for BulletPoints {
     fn default() -> Self {
-        Item::get_list_of_titles()
-            .into_iter()
-            .map(|title| (Status::Todo, Item { title }))
-            .collect()
+        Topic::iter().map(|title| (Status::Todo, title)).collect()
     }
 }
 
 impl BulletItem {
-    const fn new(status: Status, item: Item) -> Self {
-        Self { item, status }
+    const fn new(status: Status, item: Topic) -> Self {
+        Self { topic: item, status }
     }
 }
 
@@ -94,7 +78,7 @@ impl App {
     pub fn open_link(&self) {
         if let Some(index) = self.todo_list.state.selected() {
             if let Some(bul_item) = self.todo_list.items.get(index) {
-                let url = bul_item.item.get_link();
+                let url = bul_item.topic.get_link();
                 if !url.is_empty() {
                     let _ = open_url(url.as_str(), true);
                 }
@@ -216,12 +200,11 @@ impl App {
         let info = self.todo_list.state.selected().map_or_else(
             || "Nothing selected...".to_string(),
             |i| {
-                let char_status = self.todo_list.items[i].status.get_status_char();
-                format!(
-                    "{} Data:\n{}",
-                    char_status,
-                    self.todo_list.items[i].item.get_description()
-                )
+                let item = &self.todo_list.items[i];
+                let char_status = item.status.get_status_char();
+                let topic = item.topic.clone();
+                let descr = topic.get_description(item.status);
+                format!("{char_status} Data:\n{descr}")
             },
         );
 
@@ -254,9 +237,9 @@ const fn alternate_colors(i: usize) -> Color {
 impl From<&BulletItem> for ListItem<'_> {
     fn from(value: &BulletItem) -> Self {
         let line = match value.status {
-            Status::Todo => Line::styled(format!(" ☐ {}", value.item.title), TEXT_FG_COLOR),
+            Status::Todo => Line::styled(format!(" ☐ {}", value.topic), TEXT_FG_COLOR),
             Status::Completed => {
-                Line::styled(format!(" ✓ {}", value.item.title), COMPLETED_TEXT_FG_COLOR)
+                Line::styled(format!(" ✓ {}", value.topic), COMPLETED_TEXT_FG_COLOR)
             }
         };
         ListItem::new(line)

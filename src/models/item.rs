@@ -1,6 +1,20 @@
-#[derive(Debug)]
-pub struct Item {
-    pub title: String,
+use std::fmt::Display;
+use std::sync::Mutex;
+use strum::EnumIter;
+use wasm_bindgen::__rt::LazyLock;
+use crate::models::status::Status;
+
+static LAST_QUOTE: LazyLock<Mutex<String>> = LazyLock::new(|| Mutex::new(String::new()));
+#[derive(EnumIter, Debug, PartialEq, Eq, Clone)]
+pub enum Topic {
+    About,
+    Contact,
+    Cv,
+    Donate,
+    Quote,
+    Social,
+    Summary,
+    Made,
 }
 
 const QUOTES: &[&str] = &[
@@ -19,37 +33,40 @@ const QUOTES: &[&str] = &[
     "\"Only sneaky people and impostors can oppose the progress of sciences and can discredit them, because they are the only ones to whom the sciences do harm.\" - Friedrich der Große",
 ];
 
-const TITLES: &[&str] = &[
-    "about",
-    "contacts",
-    "cv",
-    "donate",
-    "quote",
-    "socials",
-    "summary",
-    "Made with Rust! 🦀",
-];
-
-impl Item {
-    pub fn get_list_of_titles() -> Vec<String> {
-        TITLES
-            .iter()
-            .map(std::string::ToString::to_string)
-            .collect()
+impl Display for Topic {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::About => "About",
+                Self::Contact => "Contact",
+                Self::Cv => "Cv",
+                Self::Donate => "Donate",
+                Self::Quote => "Quote",
+                Self::Social => "Social",
+                Self::Summary => "Summary",
+                Self::Made => "Made with Rust! 🦀",
+            }
+        )
     }
+}
+
+impl Topic {
     pub fn get_link(&self) -> String {
-        String::from(match self.title.to_uppercase().as_str() {
-            "DONATE" => "https://paypal.me/danielegiachetto",
-            "SOCIALS" => "https://linkedin.com/in/danielegiachetto",
-            "CONTACTS" => "mailto:work@danielegiachetto.com",
-            "CV" => "https://github.com/RakuJa/CV/blob/master/CV.pdf",
-            "MADE WITH RUST! 🦀" => "https://github.com/orhun/ratzilla",
+        String::from(match self {
+            Self::Donate => "https://paypal.me/danielegiachetto",
+            Self::Social => "https://linkedin.com/in/danielegiachetto",
+            Self::Contact => "mailto:work@danielegiachetto.com",
+            Self::Cv => "https://github.com/RakuJa/CV/blob/master/CV.pdf",
+            Self::Made => "https://github.com/orhun/ratzilla",
             _ => "",
         })
     }
-    pub fn get_description(&self) -> String {
-        String::from(match self.title.to_uppercase().as_str() {
-            "ABOUT" => {
+    pub fn get_description(&self, status: Status) -> String {
+        let tmp_val;
+        String::from(match self {
+            Self::About => {
                 "
                      ███████████             █████                      ███
                     ░░███░░░░░███           ░░███                      ░░░
@@ -67,32 +84,40 @@ impl Item {
                     This is an interactive website, in which you'll use the TUI with your keyboard to know more about myself."
 
             }
-            "CV" => {
+            Self::Cv => {
                 "https://github.com/RakuJa/CV/blob/master/CV.pdf"
             },
-            "CONTACTS" => {
+            Self::Contact => {
                 "mailto:work@danielegiachetto.com \n\
                 mailto:education@danielegiachetto.com \n\
                 mailto:personal@danielegiachetto.com
                 "
             }
-            "DONATE" => {
+            Self::Donate => {
                 "https://paypal.me/danielegiachetto \n\
                 https://ko-fi.com/rakuja
                 "
             },
-            "QUOTE" => {
-                fastrand::choice(QUOTES).unwrap_or(
-                    &"\"Victory belongs to the most persevering.\" - Napoleon Bonaparte"
-                )
+            Self::Quote => {
+                tmp_val = match status {
+                    Status::Completed => LAST_QUOTE.lock().map_or(String::new(), |lq| lq.clone()),
+                    Status::Todo => {
+                        let quote = get_random_quote();
+                        if let Ok(mut lq) = LAST_QUOTE.lock() {
+                            (*lq).clone_from(&quote);
+                        }
+                        quote
+                    }
+                };
+                tmp_val.as_str()
             },
-            "SOCIALS" => {
+            Self::Social => {
                 "https://linkedin.com/in/danielegiachetto \n\
                 https://github.com/rakuja
                 "
 
             },
-            "SUMMARY" => {
+            Self::Summary => {
                 "
                                                      ./o.                  🚗 My daily drivers: EndeavourOS | CachyOS
                                                    ./sssso-                --------------------
@@ -113,9 +138,14 @@ impl Item {
  mailto:work@danielegiachetto.com | mailto:education@danielegiachetto.com | mailto:personal@danielegiachetto.com
                 "
             },
-            "MADE WITH RUST! 🦀" => "I can't hold my inner voice. He tells me to rewrite the complete universe with Rust \n\
+            Self::Made => "I can't hold my inner voice. He tells me to rewrite the complete universe with Rust \n\
             MADE WITH ♥ using the fantastic Ratzilla library => https://github.com/orhun/ratzilla",
-            _ => "",
         })
     }
+}
+
+fn get_random_quote() -> String {
+    (*fastrand::choice(QUOTES).unwrap_or(
+        &"\"Victory belongs to the most persevering.\" - Napoleon Bonaparte"
+    )).to_string()
 }

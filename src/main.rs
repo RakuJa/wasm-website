@@ -198,17 +198,17 @@ impl State {
 
 fn render_intro(f: &mut Frame<'_>, state: &mut State) {
     Clear.render(f.area(), f.buffer_mut());
-    let area = f.area().inner_centered(43, 5);
+    let area = f.area().inner_centered(43, 3);
     let main_text = Text::from(vec![
         Line::from("| R A K U J A |").bold(),
         Line::from("Daniele Giachetto").italic(),
         Line::from("https://danielegiachetto.com").bold(),
     ]);
     let area_below = Rect {
-        x: area.x,               // Same X position
-        y: area.y + area.height, // Starts right below the first area
-        width: area.width,       // Same width (or adjust)
-        height: 4,               // Desired height
+        x: area.x,
+        y: area.y + area.height + 3,
+        width: area.width,
+        height: 2,
     };
     let secondary_text = Text::from(vec![
         Line::from(".. PRESS ANY (KEYBOARD) KEY TO START ..").italic(),
