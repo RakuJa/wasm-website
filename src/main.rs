@@ -21,11 +21,9 @@ use std::io;
 use std::rc::Rc;
 use tachyonfx::fx::RepeatMode;
 use tachyonfx::{
-    CenteredShrink, Duration, Effect, EffectRenderer, EffectTimer, Interpolation, Motion, Shader,
+    CenteredShrink, Duration, Effect, EffectRenderer, EffectTimer, Interpolation, Motion,
     fx,
 };
-use wasm_bindgen::JsValue;
-use web_sys::console;
 use website::backend::{BackendType, MultiBackendBuilder};
 
 mod models;
@@ -61,6 +59,9 @@ fn main() -> io::Result<()> {
         move |event| {
             let mut app_state = app_state_cloned.borrow_mut();
             match event.code {
+                KeyCode::Esc => {
+                    app_state.scene = SceneEnum::Intro;
+                }
                 KeyCode::Right => {
                     app_state.on_right();
                 }
@@ -94,14 +95,13 @@ impl Default for State {
         Self {
             scene: SceneEnum::Intro,
             intro_effect: fx::sequence(&[
-                fx::ping_pong(fx::sweep_in(
+                fx::sweep_in(
                     Motion::LeftToRight,
-                    10,
-                    0,
-                    Color::Magenta,
-                    EffectTimer::from_ms(3000, Interpolation::QuadIn),
-                )),
-                fx::coalesce((3000, Interpolation::SineOut)),
+                    50,
+                    30,
+                    Color::Black,
+                    EffectTimer::from_ms(20000, Interpolation::SineInOut),
+                ),
                 fx::sleep(20000),
                 fx::repeat(
                     fx::sequence(&[
@@ -139,9 +139,7 @@ impl Default for State {
 
 fn ui(f: &mut Frame<'_>, state: &mut State) {
     render_intro(f, state);
-    let value: JsValue = state.intro_effect.running().into();
-    console::log_2(&"Is intro running?>".into(), &value);
-    if !state.intro_effect.running() || state.scene == SceneEnum::List {
+    if state.scene == SceneEnum::List {
         render_menu(f, state);
     } else {
         render_intro(f, state);
@@ -213,8 +211,8 @@ fn render_intro(f: &mut Frame<'_>, state: &mut State) {
         height: 2,
     };
     let secondary_text = Text::from(vec![
-        Line::from(".. PRESS ANY (KEYBOARD) KEY TO START ..").italic(),
-        Line::from(" ..this site is NOT mobile friendly.."),
+        Line::from(".. PRESS ANY KEY TO START ..").italic(),
+        Line::from(".. this website is NOT mobile friendly .."),
     ]);
     f.render_widget(main_text.light_red().centered(), area);
     f.render_widget(secondary_text.light_magenta().centered(), area_below);
