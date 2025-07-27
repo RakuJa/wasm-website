@@ -1,18 +1,15 @@
-use crate::models::item::Topic;
-use crate::{
-    ALT_ROW_BG_COLOR, COMPLETED_TEXT_FG_COLOR, NORMAL_ROW_BG, SELECTED_STYLE, TEXT_FG_COLOR,
-    TODO_HEADER_STYLE,
-};
+use crate::models::status::Status;
+use crate::models::topic::Topic;
+use crate::{NORMAL_BG, SELECTED_STYLE, TEXT_DATA_COLOR, TODO_HEADER_STYLE};
 use ratzilla::ratatui::buffer::Buffer;
 use ratzilla::ratatui::layout::{Constraint, Layout, Rect};
-use ratzilla::ratatui::prelude::{Color, Line, StatefulWidget, Stylize, Widget};
+use ratzilla::ratatui::prelude::{Line, StatefulWidget, Style, Stylize, Widget};
 use ratzilla::ratatui::symbols;
 use ratzilla::ratatui::widgets::{
     Block, Borders, HighlightSpacing, List, ListItem, ListState, Padding, Paragraph, Wrap,
 };
 use ratzilla::utils::open_url;
 use strum::IntoEnumIterator;
-use crate::models::status::Status;
 
 #[derive(Default)]
 pub struct App {
@@ -50,7 +47,10 @@ impl Default for BulletPoints {
 
 impl BulletItem {
     const fn new(status: Status, item: Topic) -> Self {
-        Self { topic: item, status }
+        Self {
+            topic: item,
+            status,
+        }
     }
 }
 
@@ -152,6 +152,7 @@ impl Widget for &mut App {
 impl App {
     fn render_header(area: Rect, buf: &mut Buffer) {
         Paragraph::new("Daniele's public data")
+            .light_magenta()
             .bold()
             .centered()
             .render(area, buf);
@@ -159,6 +160,7 @@ impl App {
 
     fn render_footer(area: Rect, buf: &mut Buffer) {
         Paragraph::new("Use ↓↑ or ws to move, ← or a to unselect, → or d to change status, h/e to go top/bottom, CTRL + Enter to open link.")
+            .light_magenta()
             .centered()
             .render(area, buf);
     }
@@ -169,17 +171,17 @@ impl App {
             .borders(Borders::TOP)
             .border_set(symbols::border::EMPTY)
             .border_style(TODO_HEADER_STYLE)
-            .bg(NORMAL_ROW_BG);
+            .bg(NORMAL_BG);
 
         // Iterate through all elements in the `items` and stylize them.
         let items: Vec<ListItem> = self
             .todo_list
             .items
             .iter()
-            .enumerate()
-            .map(|(i, todo_item)| {
-                let color = alternate_colors(i);
-                ListItem::from(todo_item).bg(color)
+            //.enumerate()
+            .map(|todo_item| {
+                //let color = alternate_colors(i);
+                ListItem::from(todo_item) //.bg(color)
             })
             .collect();
 
@@ -201,47 +203,38 @@ impl App {
             || "Nothing selected...".to_string(),
             |i| {
                 let item = &self.todo_list.items[i];
-                let char_status = item.status.get_status_char();
                 let topic = item.topic.clone();
                 let descr = topic.get_description(item.status);
-                format!("{char_status} Data:\n{descr}")
+                let command = topic.to_string().to_ascii_lowercase();
+                format!("visitor@danielegiachetto.com:$ ~ {command}:\n{descr}")
             },
         );
 
         // We show the list item's info under the list in this paragraph
         let block = Block::new()
-            .title(Line::raw("Details").centered())
+            .title(Line::raw("Terminal").centered())
             .borders(Borders::TOP)
             .border_set(symbols::border::EMPTY)
             .border_style(TODO_HEADER_STYLE)
-            .bg(NORMAL_ROW_BG)
+            .bg(NORMAL_BG)
             .padding(Padding::horizontal(1));
 
         // We can now render the item info
         Paragraph::new(info)
             .block(block)
-            .fg(TEXT_FG_COLOR)
+            .fg(TEXT_DATA_COLOR)
             .wrap(Wrap { trim: false })
             .render(area, buf);
     }
 }
 
-const fn alternate_colors(i: usize) -> Color {
-    if i % 2 == 0 {
-        NORMAL_ROW_BG
-    } else {
-        ALT_ROW_BG_COLOR
-    }
-}
-
 impl From<&BulletItem> for ListItem<'_> {
     fn from(value: &BulletItem) -> Self {
-        let line = match value.status {
-            Status::Todo => Line::styled(format!(" ☐ {}", value.topic), TEXT_FG_COLOR),
-            Status::Completed => {
-                Line::styled(format!(" ✓ {}", value.topic), COMPLETED_TEXT_FG_COLOR)
-            }
-        };
-        ListItem::new(line)
+        let status = value.status;
+        let style = Style::new().italic().fg(status.get_status_color());
+        ListItem::new(Line::styled(
+            format!(" {} {}", status.get_status_char(), value.topic),
+            style,
+        ))
     }
 }

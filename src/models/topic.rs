@@ -1,8 +1,8 @@
+use crate::models::status::Status;
 use std::fmt::Display;
 use std::sync::Mutex;
 use strum::EnumIter;
 use wasm_bindgen::__rt::LazyLock;
-use crate::models::status::Status;
 
 static LAST_QUOTE: LazyLock<Mutex<String>> = LazyLock::new(|| Mutex::new(String::new()));
 #[derive(EnumIter, Debug, PartialEq, Eq, Clone)]
@@ -14,7 +14,7 @@ pub enum Topic {
     Quote,
     Social,
     Summary,
-    Made,
+    Credits,
 }
 
 const QUOTES: &[&str] = &[
@@ -43,10 +43,10 @@ impl Display for Topic {
                 Self::Contact => "Contact",
                 Self::Cv => "Cv",
                 Self::Donate => "Donate",
-                Self::Quote => "Quote",
                 Self::Social => "Social",
+                Self::Quote => "Quote",
                 Self::Summary => "Summary",
-                Self::Made => "Made with Rust! 🦀",
+                Self::Credits => "Credits",
             }
         )
     }
@@ -59,7 +59,7 @@ impl Topic {
             Self::Social => "https://linkedin.com/in/danielegiachetto",
             Self::Contact => "mailto:work@danielegiachetto.com",
             Self::Cv => "https://github.com/RakuJa/CV/blob/master/CV.pdf",
-            Self::Made => "https://github.com/orhun/ratzilla",
+            Self::Credits => "https://github.com/orhun/ratzilla",
             _ => "",
         })
     }
@@ -85,17 +85,21 @@ impl Topic {
 
             }
             Self::Cv => {
-                "https://github.com/RakuJa/CV/blob/master/CV.pdf"
+                "Software developer, space enthusiast and much more. Copy the link or open with CTRL + ENTER to learn more about myself:\n
+https://github.com/RakuJa/CV/blob/master/CV.pdf"
+
             },
             Self::Contact => {
-                "mailto:work@danielegiachetto.com \n\
-                mailto:education@danielegiachetto.com \n\
-                mailto:personal@danielegiachetto.com
+                "I have various email addresses, each divided by topic:\n
+- mailto:work@danielegiachetto.com \n\
+- mailto:education@danielegiachetto.com \n\
+- mailto:personal@danielegiachetto.com
                 "
             }
             Self::Donate => {
-                "https://paypal.me/danielegiachetto \n\
-                https://ko-fi.com/rakuja
+                "Thank you for your interest, here are the ways in which you can support my work:\n
+- https://paypal.me/danielegiachetto \n\
+- https://ko-fi.com/rakuja
                 "
             },
             Self::Quote => {
@@ -138,14 +142,25 @@ impl Topic {
  mailto:work@danielegiachetto.com | mailto:education@danielegiachetto.com | mailto:personal@danielegiachetto.com
                 "
             },
-            Self::Made => "I can't hold my inner voice. He tells me to rewrite the complete universe with Rust \n\
-            MADE WITH ♥ using the fantastic Ratzilla library => https://github.com/orhun/ratzilla",
+            Self::Credits => "I can't hold my inner voice. He tells me to rewrite the complete universe with Rust \n\
+            MADE WITH ♥ using the fantastic Ratzilla library => https://github.com/orhun/ratzilla
+            ⠀⠀⣠⠤⠖⠒⠦⢤⡀⠀⠀⠀⠀⠀⠀⢀⠤⠴⠒⠢⠤⣀⠀⠀
+            ⠀⣼⠁⠀⠀⡠⢖⡉⠁⠀⠀⠀⠀⠀⠀⠈⢙⡲⣄⠀⠀⠈⣇⠀
+            ⠀⣟⣄⠀⠐⠓⢋⡇⠀⠀⠀⠀⠀⠀⠀⠀⢹⡙⠚⠀⠀⡠⣻⠀
+            ⠀⠈⡶⢭⣒⡺⠟⣀⣰⣿⠦⠤⠤⢼⣿⣆⡈⠻⢖⣒⡭⡾⠁⠀
+            ⠀⠀⠱⡘⢄⡰⠊⠁⠀⠀⠀⠀⠀⠀⠀⠀⠈⠑⣄⡰⣃⠇⠀⠀
+            ⠀⣀⠤⠬⢽⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣸⡯⠥⠤⡀⠀
+            ⠰⠕⢋⡭⠿⡟⢄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡠⣻⠯⢭⡙⠺⠆
+            ⠀⢰⡳⠊⡩⠛⣦⡉⠒⠤⠤⠄⠤⠤⠤⠒⢉⣔⠛⢍⠓⣝⡄⠀
+            ⠀⠈⠁⡼⡴⠉⠀⠈⠓⠲⠤⠤⠤⠤⠖⠚⠁⠈⠉⣎⣧⠈⠁⠀
+            ⠀⠀⠀⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠁⠀⠀⠀
+            ",
         })
     }
 }
 
 fn get_random_quote() -> String {
-    (*fastrand::choice(QUOTES).unwrap_or(
-        &"\"Victory belongs to the most persevering.\" - Napoleon Bonaparte"
-    )).to_string()
+    (*fastrand::choice(QUOTES)
+        .unwrap_or(&"\"Victory belongs to the most persevering.\" - Napoleon Bonaparte"))
+    .to_string()
 }

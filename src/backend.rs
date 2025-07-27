@@ -14,8 +14,8 @@ use web_sys::{Url, window};
 /// Available backend types
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum BackendType {
-    #[default]
     Dom,
+    #[default]
     Canvas,
     //WebGl2, It's kinda bugged
 }

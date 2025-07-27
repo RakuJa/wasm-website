@@ -10,7 +10,7 @@ use ratzilla::ratatui::{
     layout::{Constraint, Layout},
     style::{
         Color, Modifier, Style,
-        palette::tailwind::{BLUE, ORANGE, SLATE, VIOLET},
+        palette::tailwind::{AMBER, CYAN, FUCHSIA, GRAY, GREEN, PINK, SLATE},
     },
     text::Line,
     widgets::Widget,
@@ -30,12 +30,14 @@ use website::backend::{BackendType, MultiBackendBuilder};
 
 mod models;
 
-const TODO_HEADER_STYLE: Style = Style::new().fg(ORANGE.c300).bg(BLUE.c800);
-const NORMAL_ROW_BG: Color = SLATE.c950;
-const ALT_ROW_BG_COLOR: Color = SLATE.c900;
-const SELECTED_STYLE: Style = Style::new().bg(SLATE.c800).add_modifier(Modifier::BOLD);
-const TEXT_FG_COLOR: Color = ORANGE.c500;
-const COMPLETED_TEXT_FG_COLOR: Color = VIOLET.c800;
+const TODO_HEADER_STYLE: Style = Style::new().fg(FUCHSIA.c200).bg(GRAY.c800);
+const NORMAL_BG: Color = SLATE.c950;
+const SELECTED_STYLE: Style = Style::new()
+    .bg(CYAN.c900)
+    .add_modifier(Modifier::CROSSED_OUT);
+const TEXT_FG_COLOR: Color = GREEN.c300;
+const TEXT_DATA_COLOR: Color = AMBER.c300;
+const COMPLETED_TEXT_FG_COLOR: Color = PINK.c950;
 
 struct State {
     scene: SceneEnum,
@@ -53,7 +55,7 @@ enum SceneEnum {
 fn main() -> io::Result<()> {
     let app_state = Rc::new(RefCell::new(State::default()));
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
-    let terminal = MultiBackendBuilder::with_fallback(BackendType::Dom).build_terminal()?;
+    let terminal = MultiBackendBuilder::with_fallback(BackendType::Canvas).build_terminal()?;
     terminal.on_key_event({
         let app_state_cloned = app_state.clone();
         move |event| {
